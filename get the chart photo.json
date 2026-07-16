@@ -1,0 +1,266 @@
+{
+  "name": "get the chart photo",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6bc9312-150c-4295-be7d-f444d6d84ab5",
+              "name": "ticker",
+              "value": "={{ $json.querry }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        -16
+      ],
+      "id": "c388db0a-d2d2-49fb-8fd0-c6b5a5b691a0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "pj2jb78ey14vwIPR1KKoX2WJ4JuReDJ81DwURFFe"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json "
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"theme\": \"dark\",\n  \"interval\": \"1W\",\n  \"symbol\": \"NASDAQ:{{ $json.ticker }}\",\n  \"override\": {\n    \"showStudyLastValue\": false\n  },\n\n  \"studies\": [\n    {\n      \"name\": \"Volume\",\n      \"forceOverlay\": true\n    },\n    {\n      \"name\": \"MACD\",\n      \"override\": {\n        \"Signal.linewidth\": 2,\n        \"Signal.color\": \"rgb(255,65,129)\"\n      }\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        -16
+      ],
+      "id": "e300ffba-8fdc-4c8d-9ed7-78ff117dc56f",
+      "name": "HTTP Request",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "1194374a-ec61-42c7-9455-f3db63d214cf",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "8727477243",
+        "file": "={{ $('HTTP Request').item.json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1392,
+        -16
+      ],
+      "id": "b2b063f8-cea5-4fe1-a283-d744807bef58",
+      "name": "Send a photo message",
+      "webhookId": "68ff323b-fca2-464c-ac11-0a95b2dbd198",
+      "credentials": {
+        "telegramApi": {
+          "id": "ls2TeHOMlwnG8ZcD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4o-mini"
+        },
+        "text": "You are an expert financial analyst specializing in technical stock chart analysis. Your role is to analyze financial charts and provide clear, detailed, and data-driven technical insights.\n\nYour analysis should cover candlestick behavior, MACD indicators, volume trends, support/resistance zones, and overall market sentiment.\n\nMaintain a professional, concise, and analytical tone. Avoid unsupported speculation. Base conclusions on observable chart data and technical indicators.\n\nAnalysis Requirements\n\nWhen analyzing a stock chart, always include the following sections:\n\n1. Candlestick Analysis\nIdentify and explain significant candlestick patterns (e.g., Bullish Engulfing, Bearish Engulfing, Doji, Hammer, Shooting Star, Morning Star).\nDescribe the overall market trend (bullish, bearish, or sideways/range-bound).\nHighlight important breakout, consolidation, and pullback zones.\nComment on price structure and recent candle behavior.\n2. MACD Analysis\nAnalyze the relationship between the MACD Line and Signal Line.\nIdentify bullish or bearish crossovers.\nInterpret the MACD Histogram and its momentum implications.\nDetect potential bullish or bearish divergences between price action and MACD.\nDiscuss momentum strength or weakening conditions.\n3. Volume Analysis\nExamine changes in trading volume.\nExplain whether volume confirms or contradicts recent price movement.\nHighlight unusual volume spikes that may indicate institutional participation or heightened market interest.\nComment on accumulation or distribution signals when relevant.\n4. Support & Resistance Levels\nIdentify major support and resistance zones.\nExplain the significance of these levels for:\nPotential reversals\nBreakouts\nBreakdown risks\nMention nearby price levels traders may monitor.\n5. Actionable Insights\n\nProvide practical, risk-aware observations such as:\n\nBullish Scenario: What confirmation signals could strengthen upside potential?\nBearish Scenario: What signals could indicate downside continuation?\nNeutral / Hold Scenario: Conditions suggesting consolidation or indecision.\nKey indicators or price levels to monitor in the near term.\nPotential risks and invalidation signals.\n\nDo not provide direct financial advice or guaranteed outcomes.\n\n6. Additional Observations\n\nInclude any other relevant technical insights, such as:\n\nTrendlines\nChart patterns (e.g., triangles, flags, head & shoulders, double top/bottom)\nRSI or other supporting indicators (if available)\nBroader market sentiment inferred from the chart structure\nOutput Style\n\nYour response should be:\n\nStructured\nClear and concise\nTechnical but accessible\nEvidence-based\nAction-oriented without giving explicit investment advice\n\ni want the direct answer the real time price and many more done make it so long and donot act like unprofessional",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1168,
+        -16
+      ],
+      "id": "0450860f-47bd-4e2b-864f-2cd8cb0b1edc",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "83CXgfoJnu3xabZs",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "68a75bd5-6636-45b7-a29e-e1da6050dad6",
+              "name": "response",
+              "value": "={{ $('Analyze image').item.json.output[0].content[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "name": "chartUrl",
+              "value": "={{ $('HTTP Request').item.json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a12d83f6-93a1-4774-af22-c137e50037e2",
+      "name": "Prepare Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1616,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "6b330b4a-337b-4bf8-a03a-4dc089e24842",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message": {
+      "main": [
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "57ffecd7-baea-496a-91f5-338c180282b3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "de17a87153f6656c37c5ff589fb7c18128ef2aba96617754197e81a12ba5712a"
+  },
+  "id": "fDxJ4pVVimOcFke3",
+  "tags": []
+}

@@ -1,0 +1,202 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8205b632-f536-4d95-b2d9-4a7eacca2ae0",
+      "name": "Telegram Trigger",
+      "webhookId": "6102d9ac-5aba-4f77-88fc-fe5aa7897a67",
+      "credentials": {
+        "telegramApi": {
+          "id": "ls2TeHOMlwnG8ZcD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "## Example 3: Financial Concepts Explanation\n** User Input :** \"Can you explain what P/E ratio means?\"\n** Agent Output :**\n\"Of course! The Price-to-Earnings (P/E) ratio is a metric used to evaluate whether a stock\nis overvalued or undervalued. It's calculated by dividing the stock's current price by its\nearnings per share (EPS). A high P/E might indicate that a stock is overpriced, while a low\nP/E could suggest it's undervalued. Let me know if you'd like to explore this further!\"\n\n## SOP (Standard Operating Procedure)\n1. *. Engage with the user :.. Respond professionally and in a friendly tone.\n2. .. Analyze stocks :**\n- If a technical analysis is requested, pass the stock ticker to *. GetChart **.\n- Surmarize insights from the resulting chart in conversational language.\n3. *+Explain financial concepts :.. Break down complex terms into simple, digestible\nexplanations tailored to the user's expertise.\n4. *. Avoid financial advice :** Provide information and analysis without suggesting actions.\n5. .. Confirm user needs :*. Ensure clarity by asking follow-up questions if necessary.\n\n## Final Notes\n- Always maintain a balance between professionalism and approachability.\n- Use the .. GetChart .. tool effectively, ensuring accurate and clear analysis results.\n- Avoid making financial predictions or recomendations. Focus on educating and informing\nthe user."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        0
+      ],
+      "id": "3cf822c7-af9f-40b5-9647-54c8cad81ce6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        352,
+        224
+      ],
+      "id": "8daea630-08ba-4a56-b84b-f1d9b689aa49",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        0
+      ],
+      "id": "8efdf4b6-1bdd-4cb2-bf16-4d5882f16cb2",
+      "name": "Send a text message",
+      "webhookId": "dbe76803-899b-4e0e-ab2d-4f3f383d5f82",
+      "credentials": {
+        "telegramApi": {
+          "id": "ls2TeHOMlwnG8ZcD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        224
+      ],
+      "id": "fcb7913a-4889-4321-aa95-e9538b7e3006",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "83CXgfoJnu3xabZs",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Gets technical analysis chart for a stock ticker. Pass the stock symbol (e.g., MSFT, AAPL, GOOGL) to receive chart analysis.",
+        "workflowId": {
+          "__rl": true,
+          "value": "fDxJ4pVVimOcFke3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/fDxJ4pVVimOcFke3",
+          "cachedResultName": "get the chart photo"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ticker": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('ticker', 'Stock ticker symbol (e.g., MSFT, AAPL, GOOGL)') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        224
+      ],
+      "id": "a5283414-6c0d-42b0-bc4f-018fe31e780f",
+      "name": "Call 'get the chart photo'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'get the chart photo'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "91ecd24f-5a9a-4ca1-81e6-bd331caada28",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "de17a87153f6656c37c5ff589fb7c18128ef2aba96617754197e81a12ba5712a"
+  },
+  "id": "j2dBHkJo5zbDkWei",
+  "tags": []
+}
