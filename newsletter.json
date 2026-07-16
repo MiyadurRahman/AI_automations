@@ -1,0 +1,410 @@
+{
+  "name": "newsletter",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "NEWSLETTER",
+        "formDescription": "GET NEWS",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "what is the topic?",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4cbe6fc7-9681-49b1-ab7f-dd259f10432f",
+      "name": "On form submission",
+      "webhookId": "de1a9c9b-723b-482f-b173-f1fbc6aeff20"
+    },
+    {
+      "parameters": {
+        "query": "=search about the topic: {{ $json['what is the topic?'] }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavily",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "b92170e3-31ff-455f-8882-db90366b965d",
+      "name": "Search",
+      "credentials": {
+        "tavilyApi": {
+          "id": "MoSDeSjoFIFTDqN3",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.results.map(item => JSON.stringify(item, null, 2)).join(\"\\n\\n\") }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role: Expert Newsletter Planner\n\nTask:\nYou will receive a set of **3 articles published within the last week**. Your objective is to create a compelling, cohesive, and engaging newsletter brief based on their content.\n\n### Output Requirements:\n\n1. **Newsletter Title**\n   Generate a creative and engaging title that captures the core essence connecting all three articles.\n\n2. **Key Topics**\n   Identify and list **3–5 key topics** extracted from the articles.\n\n   * Each topic should be a concise phrase of **3–5 words**.\n   * Focus on major themes, trends, or ideas shared across the content.\n\n3. **Flow and Tone**\n   Structure the newsletter brief to ensure:\n\n   * Smooth narrative flow between topics\n   * Consistent, engaging, and professional tone\n   * Clear thematic connection among all three articles\n   * Strong readability for a general audience\n\n4. **Newsletter Brief**\n   Write a concise summary (150–250 words) that synthesizes the main insights, developments, and takeaways from the three articles into a unified newsletter overview.\n\n5. **Audience Appeal**\n   Ensure the content is informative, engaging, and curiosity-driven, encouraging readers to explore the full articles.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        400,
+        -16
+      ],
+      "id": "19c9e276-1339-4818-9eab-c7fad53d10bb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"title\", \"topics\"],\n  \"properties\": {\n    \"title\": {\n      \"type\": \"string\",\n      \"description\": \"A short, descriptive title\"\n    },\n    \"topics\": {\n      \"type\": \"array\",\n      \"description\": \"An array of exactly three topics\",\n      \"minItems\": 3,\n      \"maxItems\": 3,\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        160
+      ],
+      "id": "bd4af403-d378-4edf-97a0-f2471974ee06",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.topics",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -16
+      ],
+      "id": "91d54dae-3506-4baa-80f6-9c5f23186876",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "query": "={{ $json['output.topics'] }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavily",
+      "typeVersion": 1,
+      "position": [
+        960,
+        64
+      ],
+      "id": "e9ab44a9-17e4-42aa-814b-5eda74d7ca08",
+      "name": "Search1",
+      "credentials": {
+        "tavilyApi": {
+          "id": "MoSDeSjoFIFTDqN3",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=topic: {{ $json.query }}\nresearch data:{{ $json.results.map(item => JSON.stringify(item, null, 2)).join(\"\\n\\n\") }}",
+        "options": {
+          "systemMessage": "Overview\n\nYou are a professional newsletter section writer. Your only task is to\n\nwrite one standalone section of a newsletter.\n\n\n\nInstructions\n\n- Always include a clear section heading followed by the section content.\n\n. Do not write an overall title, introduction, or conclusion.\n\n- Write in a professional, expert, and engaging tone suitable for a\n\nbusiness newsletter.\n\n- If you reference facts, data, or quotes, you must cite your sources\n\nand provide the actual clickable URLs.\n\n- Do not invent citations-only include real, verifiable sources.\n\n- Keep the section concise, well-structured, and easy to read."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1168,
+        64
+      ],
+      "id": "fff4ecd0-16e4-4320-b707-45ef3879c9cd",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        64
+      ],
+      "id": "a2bc9c83-3ab2-4087-9910-78e73c31765f",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        448
+      ],
+      "id": "97a74abf-fa71-48bc-9053-ddc711f3133f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "83CXgfoJnu3xabZs",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Title: {{ $('AI Agent').item.json.output.title }}\n\nSections:{{ $json.output.join(\"\\n\\n\\n\\n\") }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Role: Expert Newsletter Editor\n\nTask:\nYou will receive exactly three newsletter sections. Your job is to merge them into a cohesive, email-ready newsletter while preserving the original meaning and key insights of each section.\n\nObjectives:\n\n* Create a unified narrative across all three sections.\n* Improve clarity, readability, flow, and consistency.\n* Maintain a professional and concise tone suitable for a business audience.\n* Keep the total output under 1,000 words.\n* Do not add unrelated topics or information.\n\nHTML Structure Requirements:\n\n1. Introduction\n\n   * Begin with a single `<p>` paragraph.\n   * Reference today's date: {{ $('On form submission').item.json.submittedAt }}.\n   * Briefly introduce the three topics and explain their overall relevance.\n\n2. Main Sections\n   For each of the three provided sections:\n\n   * Use an `<h2>` heading.\n   * Keep the original title or make minor improvements for clarity.\n   * Include edited content inside one or more `<p>` tags.\n   * Preserve all factual information.\n   * Place clickable citations immediately after the related claim using:\n\n     ```html\n     <a href=\"https://example.com\">Source</a>\n     ```\n   * Never invent, modify, or fabricate sources.\n\n3. Consolidated Sources\n   After all sections, include:\n\n   ```html\n   <h3>Sources</h3>\n   <ul>\n     <li><a href=\"[URL]\">[Publication Name]</a> - [Article Title]</li>\n   </ul>\n   ```\n\n   Rules:\n\n   * Include every valid source used in the newsletter.\n   * Deduplicate identical URLs.\n   * Use full URLs.\n   * Exclude unverified or missing sources.\n\n4. Conclusion\n\n   * End with a single `<p>` paragraph.\n   * Connect the three topics.\n   * Highlight key implications, trends, or next steps.\n\nCitation Rules:\n\n* Every externally sourced factual claim must include a real, verifiable URL.\n* Preserve existing citations whenever provided.\n* Convert all citations to the standard HTML anchor format.\n* If a source cannot be verified, remove the citation rather than inventing one.\n\nAllowed HTML Tags Only:\n\n```html\n<h2>\n<h3>\n<p>\n<ul>\n<li>\n<a>\n```\n\nDo not use:\n\n* Images\n* CSS\n* JavaScript\n* Tables\n* Markdown\n* Any other HTML elements\n\nOutput Format (Return Exactly This):\n\nSubject: [Clear, specific subject line under 80 characters]\n\nContent:\n[HTML body only]\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1728,
+        64
+      ],
+      "id": "0cb58abd-9b94-42bd-8382-6f7358082da6",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"subject\": {\n      \"type\": \"string\",\n      \"description\": \"The email subject\"\n    },\n    \"content\": {\n      \"type\": \"string\",\n      \"description\": \"The newsletter content in HTML format\"\n    }\n  },\n  \"required\": [\"subject\", \"content\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1904,
+        272
+      ],
+      "id": "fdfb1b47-dcbc-4228-b3ee-86383028479c",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $json.output.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.output.content }}",
+        "options": {
+          "sendTo": "={{ $('On form submission').item.json.Email }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        64
+      ],
+      "id": "93bd29d0-3530-47bd-943f-466d16c667b3",
+      "name": "Create a draft",
+      "webhookId": "1568bc40-f604-4316-bd79-a236eb57b152",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "krh3Yn4a8v9tTpxx",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        272
+      ],
+      "id": "5be16133-b019-449b-a30c-ca786bf00def",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "16ZQOv1pf02lP6pU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Search1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8cbbc8a8-4a52-4051-a720-ad5109f94fb7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "de17a87153f6656c37c5ff589fb7c18128ef2aba96617754197e81a12ba5712a"
+  },
+  "id": "JzRXfAJmDwU6RSN1",
+  "tags": []
+}

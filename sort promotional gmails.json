@@ -1,0 +1,126 @@
+{
+  "name": "sort promotional gmails",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "SPAM"
+        ]
+      },
+      "id": "bdab62ee-b6a2-4eda-9a3f-4b2bae31bd37",
+      "name": "Add Promotions Label",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        304
+      ],
+      "webhookId": "00c58867-6eb4-44d5-b139-8fa7e83cc82e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fSE4FINmGfr9mQDG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "4b85270a-ce5b-4217-90ca-2f2ac9d301d9",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 500,
+        "simple": false,
+        "filters": {},
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "category:promotions OR \"unsubscribe\" OR subject:\"off\" OR subject:\"sale\" OR subject:\"dea"
+        }
+      },
+      "id": "94aa83aa-2269-4f5a-84f9-132acb975534",
+      "name": "Get Old Promotional Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        304
+      ],
+      "webhookId": "210c2c6a-3b9e-4281-b243-8dced30a6962",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fSE4FINmGfr9mQDG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const emails = $input.all().map((item) => item.json);\nconst promotionalKeywords = [\n  \"marketing\",\n  \"promotion\",\n  \"sales\",\n  \"discount\",\n  \"newsletter\",\n  \"advertising\",\n  \"subscription\",\n  \"automated\",\n];\nconst personalKeywords = [\n  \"personal\",\n  \"work\",\n  \"university\",\n  \"educational\",\n  \"banking\",\n  \"financial\",\n];\n\nemails.forEach((email) => {\n  const emailContent = email.text.toLowerCase();\n  if (promotionalKeywords.some((keyword) => emailContent.includes(keyword))) {\n    email.action = \"DELETE\";\n  } else if (\n    personalKeywords.some((keyword) => emailContent.includes(keyword))\n  ) {\n    email.action = \"KEEP\";\n  }\n});\n\nreturn emails.map((email) => ({ json: email }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        304
+      ],
+      "id": "dea32bf6-667f-4288-91f5-a6a20071a71b",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Old Promotional Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Old Promotional Emails": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Add Promotions Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d5d05401-d2b3-43c0-9dd3-fefc2ffe95b8",
+  "meta": {
+    "instanceId": "de17a87153f6656c37c5ff589fb7c18128ef2aba96617754197e81a12ba5712a"
+  },
+  "id": "Meae9mJP3DqADyLY",
+  "tags": []
+}
